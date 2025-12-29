@@ -2,12 +2,16 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 import os
 import shutil
-from utils import process_and_embed, save_to_chromadb, answer_query, get_chroma_client, get_supported_formats
-from dotenv import load_dotenv
-
-load_dotenv()
+from utils import (
+    process_and_embed,
+    save_to_chromadb,
+    answer_query,
+    get_chroma_client,
+    get_supported_formats
+)
 
 app = FastAPI()
+
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -20,31 +24,20 @@ class Question(BaseModel):
 
 
 @app.get("/")
-async def root():
-    return {
-        "message": "RAG Document Q&A System API",
-        "status": "running",
-        "supported_formats": get_supported_formats()
-    }
+def root():
+    return {"status": "running"}
 
 
 @app.get("/supported-formats")
-async def supported_formats():
-    """Return list of supported file formats"""
+def supported_formats():
     return {"formats": get_supported_formats()}
 
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-
-    file_ext = os.path.splitext(file.filename)[-1].lower().replace(".", "")
-    supported = get_supported_formats()
-
-    if file_ext not in supported:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file type: {file_ext}. Supported formats: {', '.join(supported)}"
-        )
+    ext = os.path.splitext(file.filename)[-1].lower().replace(".", "")
+    if ext not in get_supported_formats():
+        raise HTTPException(status_code=400, detail="Unsupported file type")
 
     file_path = os.path.join(UPLOAD_DIR, file.filename)
 
@@ -52,13 +45,12 @@ async def upload_file(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        embedded_chunks = process_and_embed(file_path)
-        save_to_chromadb(embedded_chunks, client=client, collection_name=COLLECTION_NAME)
+        chunks = process_and_embed(file_path)
+        save_to_chromadb(chunks, client, COLLECTION_NAME)
 
         return {
             "filename": file.filename,
-            "total_chunks": len(embedded_chunks),
-            "message": "File uploaded and processed successfully"
+            "total_chunks": len(chunks)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -68,23 +60,21 @@ async def upload_file(file: UploadFile = File(...)):
 
 
 @app.post("/query")
-async def query_question(request: Question):
-    try:
-        answer = answer_query(request.question, client=client, collection_name=COLLECTION_NAME)
-        return {"answer": answer}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+def query(request: Question):
+    return {
+        "answer": answer_query(
+            request.question,
+            client,
+            COLLECTION_NAME
+        )
+    }
 
 
 @app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "supported_formats": get_supported_formats()
-    }
+def health():
+    return {"status": "healthy"}
 
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)

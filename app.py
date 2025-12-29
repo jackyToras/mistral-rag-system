@@ -13,114 +13,173 @@ if "messages" not in st.session_state:
 if "uploaded_files" not in st.session_state:
     st.session_state.uploaded_files = []
 
-st.title("RAG Document Q&A System")
-st.markdown("Upload your documents and ask questions about them!")
+
+st.markdown(
+    """
+    <style>
+    /* Global */
+    body {
+        background-color: #0e1117;
+        color: #e6e6e6;
+    }
+
+    /* Header */
+    .app-header {
+        background: linear-gradient(90deg, #4f46e5, #9333ea);
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        color: white;
+    }
+
+    /* Cards */
+    .card {
+        background-color: #161b22;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        border: 1px solid #262730;
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #0b0f14;
+    }
+
+    /* Chat bubbles */
+    .user-msg {
+        background-color: #2563eb;
+        padding: 12px;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 8px;
+        max-width: 80%;
+    }
+
+    .assistant-msg {
+        background-color: #1f2937;
+        padding: 12px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        max-width: 80%;
+        border: 1px solid #374151;
+    }
+
+    /* Buttons */
+    button[kind="primary"] {
+        background-color: #4f46e5 !important;
+        border-radius: 8px !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+st.markdown(
+    """
+    <div class="app-header">
+        <h1>📄 RAG Document Q&A System</h1>
+        <p>Upload documents and ask intelligent questions using Retrieval-Augmented Generation.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 
 with st.sidebar:
-    st.header(" Upload Documents")
+    st.markdown("<h2>📤 Upload Documents</h2>", unsafe_allow_html=True)
 
     try:
         response = requests.get(f"{API_URL}/supported-formats", timeout=2)
         if response.status_code == 200:
             supported_formats = response.json()["formats"]
-            format_display = ", ".join([f.upper() for f in supported_formats])
-            st.markdown(f"**Supported formats:** {format_display}")
+            st.markdown(
+                f"**Supported formats:** {', '.join([f.upper() for f in supported_formats])}"
+            )
         else:
-            supported_formats = ["pdf", "docx"]
-            st.markdown("**Supported formats:** PDF, DOCX")
+            supported_formats = ["pdf"]
     except:
-        supported_formats = ["pdf", "docx"]
-        st.markdown("**Supported formats:** PDF, DOCX")
+        supported_formats = ["pdf"]
 
     uploaded_file = st.file_uploader(
         "Choose a file",
-        type=supported_formats,
-        help="Upload documents to add to the knowledge base"
+        type=supported_formats
     )
 
-    if uploaded_file is not None:
-        if st.button("Process Document", type="primary"):
-            with st.spinner("Processing document..."):
-                try:
-                    files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
-
-                    response = requests.post(f"{API_URL}/upload", files=files)
-
-                    if response.status_code == 200:
-                        result = response.json()
-                        st.success(f" Successfully processed {result['filename']}")
-                        st.info(f" Total chunks created: {result['total_chunks']}")
-
-                        if uploaded_file.name not in st.session_state.uploaded_files:
-                            st.session_state.uploaded_files.append(uploaded_file.name)
-                    else:
-                        error_data = response.json()
-                        st.error(f" Error: {error_data.get('detail', 'Unknown error')}")
-                except Exception as e:
-                    st.error(f" Error uploading file: {str(e)}")
+    if uploaded_file and st.button("Process Document", type="primary"):
+        with st.spinner("Processing document..."):
+            files = {
+                "file": (
+                    uploaded_file.name,
+                    uploaded_file.getvalue(),
+                    uploaded_file.type
+                )
+            }
+            try:
+                response = requests.post(f"{API_URL}/upload", files=files)
+                if response.status_code == 200:
+                    result = response.json()
+                    st.success(f"Processed {result['filename']}")
+                    st.info(f"Total chunks: {result['total_chunks']}")
+                    if uploaded_file.name not in st.session_state.uploaded_files:
+                        st.session_state.uploaded_files.append(uploaded_file.name)
+                else:
+                    st.error(response.text)
+            except Exception as e:
+                st.error(str(e))
 
     if st.session_state.uploaded_files:
         st.markdown("---")
-        st.subheader("Uploaded Files")
-        for file in st.session_state.uploaded_files:
-            st.text(f"✓ {file}")
+        st.subheader("📚 Uploaded Files")
+        for f in st.session_state.uploaded_files:
+            st.write(f"✓ {f}")
 
     st.markdown("---")
     st.subheader("🔌 API Status")
     try:
-        response = requests.get(f"{API_URL}/health", timeout=2)
-        if response.status_code == 200:
+        if requests.get(f"{API_URL}/health", timeout=2).status_code == 200:
             st.success("Connected")
         else:
-            st.error("API Error")
+            st.error("API error")
     except:
         st.error("Disconnected")
-        st.caption("Make sure the API is running on port 8000")
-        st.caption("Run: python main.py")
 
 
-st.markdown("---")
-st.header("💬 Ask Questions")
+st.markdown("<h2>💬 Ask Questions</h2>", unsafe_allow_html=True)
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+for msg in st.session_state.messages:
+    if msg["role"] == "user":
+        st.markdown(
+            f"<div class='user-msg'>{msg['content']}</div>",
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            f"<div class='assistant-msg'>{msg['content']}</div>",
+            unsafe_allow_html=True
+        )
 
 if prompt := st.chat_input("Ask a question about your documents..."):
-
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
 
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            try:
-                response = requests.post(
-                    f"{API_URL}/query",
-                    json={"question": prompt}
-                )
+    with st.spinner("Thinking..."):
+        try:
+            response = requests.post(
+                f"{API_URL}/query",
+                json={"question": prompt}
+            )
+            data = response.json()
+            answer = data.get("answer", "No answer returned.")
 
-                if response.status_code == 200:
-                    answer = response.json()["answer"]
-                    st.markdown(answer)
-                    st.session_state.messages.append({"role": "assistant", "content": answer})
-                else:
-                    error_msg = f"Error: {response.text}"
-                    st.error(error_msg)
-                    st.session_state.messages.append({"role": "assistant", "content": error_msg})
-            except Exception as e:
-                error_msg = f"Error connecting to API: {str(e)}"
-                st.error(error_msg)
-                st.session_state.messages.append({"role": "assistant", "content": error_msg})
+            st.session_state.messages.append(
+                {"role": "assistant", "content": answer}
+            )
 
+            st.rerun()
+        except Exception as e:
+            st.error(str(e))
 
-if st.session_state.messages:
-    if st.button("Clear Chat History"):
-        st.session_state.messages = []
-        st.rerun()
-
-
-st.markdown("---")
-st.caption("Built with Streamlit, FastAPI, ChromaDB, and Mistral AI")
-st.caption(
-    "⚠️ Python 3.13: Image and advanced PPTX processing not available. Use Python 3.12 or lower for full features.")
+if st.session_state.messages and st.button("🗑️ Clear Chat"):
+    st.session_state.messages = []
+    st.rerun()
