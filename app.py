@@ -13,68 +13,20 @@ if "messages" not in st.session_state:
 if "uploaded_files" not in st.session_state:
     st.session_state.uploaded_files = []
 
-
 st.markdown(
     """
     <style>
-    /* Global */
-    body {
-        background-color: #0e1117;
-        color: #e6e6e6;
-    }
-
-    /* Header */
-    .app-header {
-        background: linear-gradient(90deg, #4f46e5, #9333ea);
-        padding: 20px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        color: white;
-    }
-
-    /* Cards */
-    .card {
-        background-color: #161b22;
-        padding: 16px;
-        border-radius: 12px;
-        margin-bottom: 12px;
-        border: 1px solid #262730;
-    }
-
-    /* Sidebar */
-    section[data-testid="stSidebar"] {
-        background-color: #0b0f14;
-    }
-
-    /* Chat bubbles */
-    .user-msg {
-        background-color: #2563eb;
-        padding: 12px;
-        border-radius: 12px;
-        color: white;
-        margin-bottom: 8px;
-        max-width: 80%;
-    }
-
-    .assistant-msg {
-        background-color: #1f2937;
-        padding: 12px;
-        border-radius: 12px;
-        margin-bottom: 8px;
-        max-width: 80%;
-        border: 1px solid #374151;
-    }
-
-    /* Buttons */
-    button[kind="primary"] {
-        background-color: #4f46e5 !important;
-        border-radius: 8px !important;
-    }
+    body { background-color: #0e1117; color: #e6e6e6; }
+    .app-header { background: linear-gradient(90deg, #4f46e5, #9333ea); padding: 20px; border-radius: 12px; margin-bottom: 20px; color: white; }
+    .card { background-color: #161b22; padding: 16px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #262730; }
+    section[data-testid="stSidebar"] { background-color: #0b0f14; }
+    .user-msg { background-color: #2563eb; padding: 12px; border-radius: 12px; color: white; margin-bottom: 8px; max-width: 80%; }
+    .assistant-msg { background-color: #1f2937; padding: 12px; border-radius: 12px; margin-bottom: 8px; max-width: 80%; border: 1px solid #374151; }
+    button[kind="primary"] { background-color: #4f46e5 !important; border-radius: 8px !important; }
     </style>
     """,
     unsafe_allow_html=True
 )
-
 
 st.markdown(
     """
@@ -85,7 +37,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 
 with st.sidebar:
     st.markdown("<h2>📤 Upload Documents</h2>", unsafe_allow_html=True)
@@ -125,7 +76,12 @@ with st.sidebar:
                     if uploaded_file.name not in st.session_state.uploaded_files:
                         st.session_state.uploaded_files.append(uploaded_file.name)
                 else:
-                    st.error(response.text)
+                    # Show concise backend error message
+                    try:
+                        err = response.json()
+                        st.error(err.get("detail", response.text))
+                    except:
+                        st.error(response.text)
             except Exception as e:
                 st.error(str(e))
 
@@ -144,7 +100,6 @@ with st.sidebar:
             st.error("API error")
     except:
         st.error("Disconnected")
-
 
 st.markdown("<h2>💬 Ask Questions</h2>", unsafe_allow_html=True)
 
@@ -169,13 +124,19 @@ if prompt := st.chat_input("Ask a question about your documents..."):
                 f"{API_URL}/query",
                 json={"question": prompt}
             )
-            data = response.json()
-            answer = data.get("answer", "No answer returned.")
+            if response.status_code == 200:
+                data = response.json()
+                answer = data.get("answer", "No answer returned.")
+            else:
+                try:
+                    err = response.json()
+                    answer = err.get("detail", response.text)
+                except:
+                    answer = response.text
 
             st.session_state.messages.append(
                 {"role": "assistant", "content": answer}
             )
-
             st.rerun()
         except Exception as e:
             st.error(str(e))

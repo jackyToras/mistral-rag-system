@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 import os
 import shutil
+
 from utils import (
     process_and_embed,
     save_to_chromadb,
@@ -46,12 +47,17 @@ async def upload_file(file: UploadFile = File(...)):
             shutil.copyfileobj(file.file, buffer)
 
         chunks = process_and_embed(file_path)
+        if not chunks:
+            raise HTTPException(status_code=400, detail="No extractable content found in document")
+
         save_to_chromadb(chunks, client, COLLECTION_NAME)
 
         return {
             "filename": file.filename,
             "total_chunks": len(chunks)
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
