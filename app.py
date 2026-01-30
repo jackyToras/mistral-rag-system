@@ -1,12 +1,14 @@
 import streamlit as st
 import requests
+import os
+
 
 st.set_page_config(
     page_title="RAG Document Q&A System",
     layout="wide"
 )
 
-API_URL = "http://localhost:8000"
+API_URL = os.getenv("FASTAPI_URL", "http://localhost:8000")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
