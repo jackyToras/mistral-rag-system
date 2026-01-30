@@ -7,7 +7,7 @@ st.set_page_config(
     layout="wide"
 )
 
-API_URL = os.getenv("FASTAPI_URL", "http://localhost:8000")
+API_URL = os.getenv("FASTAPI_URL", "http://localhost:8501")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
