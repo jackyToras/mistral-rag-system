@@ -7,8 +7,7 @@ st.set_page_config(
     layout="wide"
 )
 
-API_URL = os.getenv("FASTAPI_URL", "http://localhost:8501")
-
+API_URL = os.getenv(FASTAPI_URL = "https://mistral-rag-system.onrender.com")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "uploaded_files" not in st.session_state:
