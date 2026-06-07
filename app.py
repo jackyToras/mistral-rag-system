@@ -28,14 +28,14 @@ st.markdown("""
 
 st.markdown("""
     <div class="app-header">
-        <h1>📄 RAG Document Q&A System</h1>
+        <h1>RAG Document Q&A System</h1>
         <p>Upload documents and ask intelligent questions using Retrieval-Augmented Generation.</p>
     </div>
 """, unsafe_allow_html=True)
 
 
 with st.sidebar:
-    st.markdown("<h2>📤 Upload Documents</h2>", unsafe_allow_html=True)
+    st.markdown("<h2>Upload Documents</h2>", unsafe_allow_html=True)
 
     try:
         response = requests.get(f"{API_URL}/supported-formats", timeout=2)
@@ -73,12 +73,12 @@ with st.sidebar:
 
     if st.session_state.uploaded_files:
         st.markdown("---")
-        st.subheader("📚 Uploaded Files")
+        st.subheader("Uploaded Files")
         for f in st.session_state.uploaded_files:
             st.write(f"✓ {f}")
 
     st.markdown("---")
-    st.subheader("🔌 API Status")
+    st.subheader("API Status")
     try:
         if requests.get(f"{API_URL}/health", timeout=2).status_code == 200:
             st.success("Connected")
@@ -116,6 +116,6 @@ if prompt := st.chat_input("Ask a question about your documents..."):
         except Exception as e:
             st.error(str(e))
 
-if st.session_state.messages and st.button("🗑️ Clear Chat"):
+if st.session_state.messages and st.button("Clear Chat"):
     st.session_state.messages = []
     st.rerun()
