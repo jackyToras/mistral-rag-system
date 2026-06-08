@@ -24,7 +24,6 @@ st.markdown("""
         color: #c9d1d9;
     }
 
-    /* ── Main background ── */
     .stApp {
         background-color: #080a0c;
         background-image:
@@ -32,7 +31,6 @@ st.markdown("""
             linear-gradient(180deg, #080a0c 0%, #0d1117 100%);
     }
 
-    /* ── Sidebar ── */
     section[data-testid="stSidebar"] {
         background-color: #0d1117 !important;
         border-right: 1px solid #1c2128;
@@ -50,7 +48,6 @@ st.markdown("""
         font-size: 0.72rem !important;
     }
 
-    /* ── App header ── */
     .app-header {
         background: #0d1117;
         border: 1px solid #1c2128;
@@ -75,7 +72,6 @@ st.markdown("""
         letter-spacing: 0.02em;
     }
 
-    /* ── Cards ── */
     .card {
         background-color: #0d1117;
         padding: 18px 20px;
@@ -84,7 +80,6 @@ st.markdown("""
         border: 1px solid #1c2128;
     }
 
-    /* ── Chat messages ── */
     .user-msg {
         background-color: #161b22;
         border: 1px solid #1c2128;
@@ -111,7 +106,6 @@ st.markdown("""
         font-family: 'JetBrains Mono', monospace;
     }
 
-    /* ── Section heading ── */
     h2 {
         font-family: 'Syne', sans-serif !important;
         font-weight: 800 !important;
@@ -124,7 +118,7 @@ st.markdown("""
         margin-bottom: 18px;
     }
 
-    /* ── Buttons ── */
+
     .stButton > button {
         background-color: #161b22 !important;
         color: #00c878 !important;
@@ -154,7 +148,6 @@ st.markdown("""
         text-transform: uppercase !important;
     }
 
-    /* ── File uploader ── */
     [data-testid="stFileUploader"] {
         background-color: #0d1117 !important;
         border: 1px dashed #2d3748 !important;
@@ -162,7 +155,6 @@ st.markdown("""
         padding: 12px !important;
     }
 
-    /* ── Chat input ── */
     [data-testid="stChatInput"] textarea {
         background-color: #0d1117 !important;
         border: 1px solid #1c2128 !important;
@@ -176,7 +168,6 @@ st.markdown("""
         box-shadow: 0 0 0 2px rgba(0, 200, 120, 0.08) !important;
     }
 
-    /* ── Success / Info / Error ── */
     .stSuccess {
         background-color: rgba(0, 200, 120, 0.07) !important;
         border: 1px solid rgba(0, 200, 120, 0.3) !important;
@@ -200,17 +191,14 @@ st.markdown("""
         font-size: 0.8rem !important;
     }
 
-    /* ── Divider ── */
     hr {
         border-color: #1c2128 !important;
     }
 
-    /* ── Spinner ── */
     .stSpinner > div {
         border-top-color: #00c878 !important;
     }
 
-    /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: #0d1117; }
     ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 2px; }
@@ -278,8 +266,7 @@ with st.sidebar:
             st.error("API error")
     except:
         st.error("Disconnected")
-
-# 💬 Chat Interface
+        
 st.markdown("<h2>Ask Questions</h2>", unsafe_allow_html=True)
 
 for msg in st.session_state.messages:
